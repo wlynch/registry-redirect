@@ -9,16 +9,23 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/chainguard-dev/registry-redirect/pkg/redirect"
-	"knative.dev/pkg/logging"
+	"github.com/wlynch/slogctx"
 )
+
+func init() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
+}
 
 func main() {
 	flag.Parse()
-	logger := logging.FromContext(context.Background())
+	logger := slogctx.FromContext(context.Background())
 
 	http.Handle("/", redirect.New())
 
@@ -27,5 +34,8 @@ func main() {
 		port = "8080"
 	}
 	logger.Infof("Listening on port %s", port)
-	logger.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 }

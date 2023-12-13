@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"knative.dev/pkg/logging"
+	"github.com/wlynch/slogctx"
 )
 
 func redact(in http.Header) http.Header {
@@ -30,8 +30,8 @@ func New() http.Handler {
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
-			logger := logging.FromContext(ctx)
-			logger.Infow("got request",
+			logger := slogctx.FromContext(ctx)
+			logger.Info("got request",
 				"method", req.Method,
 				"url", req.URL.String(),
 				"header", redact(req.Header))
@@ -55,11 +55,11 @@ func New() http.Handler {
 
 func v2(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	logger := logging.FromContext(ctx)
+	logger := slogctx.FromContext(ctx)
 
 	out, _ := http.NewRequest(req.Method, "https://cgr.dev/v2/", nil)
 
-	logger.Infow("sending request",
+	logger.Info("sending request",
 		"method", out.Method,
 		"url", out.URL.String(),
 		"header", redact(req.Header))
@@ -73,7 +73,7 @@ func v2(resp http.ResponseWriter, req *http.Request) {
 	}
 	defer back.Body.Close()
 
-	logger.Infow("got response",
+	logger.Info("got response",
 		"method", out.Method,
 		"url", out.URL.String(),
 		"status", back.Status,
@@ -105,7 +105,7 @@ func v2(resp http.ResponseWriter, req *http.Request) {
 
 func token(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	logger := logging.FromContext(ctx)
+	logger := slogctx.FromContext(ctx)
 
 	vals := req.URL.Query()
 	scope := vals.Get("scope")
@@ -116,7 +116,7 @@ func token(resp http.ResponseWriter, req *http.Request) {
 	out, _ := http.NewRequest(req.Method, url, nil)
 	out.Header = req.Header.Clone()
 
-	logger.Infow("sending request",
+	logger.Info("sending request",
 		"method", out.Method,
 		"url", out.URL.String(),
 		"header", redact(out.Header))
@@ -130,7 +130,7 @@ func token(resp http.ResponseWriter, req *http.Request) {
 	}
 	defer back.Body.Close()
 
-	logger.Infow("got response",
+	logger.Info("got response",
 		"method", out.Method,
 		"url", out.URL.String(),
 		"status", back.Status,
@@ -150,7 +150,7 @@ func token(resp http.ResponseWriter, req *http.Request) {
 
 func proxy(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	logger := logging.FromContext(ctx)
+	logger := slogctx.FromContext(ctx)
 
 	repo := mux.Vars(req)["repo"]
 	rest := mux.Vars(req)["rest"]
@@ -162,7 +162,7 @@ func proxy(resp http.ResponseWriter, req *http.Request) {
 	out, _ := http.NewRequest(req.Method, url, nil)
 	out.Header = req.Header.Clone()
 
-	logger.Infow("sending request",
+	logger.Info("sending request",
 		"method", out.Method,
 		"url", out.URL.String(),
 		"header", redact(out.Header))
@@ -176,7 +176,7 @@ func proxy(resp http.ResponseWriter, req *http.Request) {
 	}
 	defer back.Body.Close()
 
-	logger.Infow("got response",
+	logger.Info("got response",
 		"method", req.Method,
 		"url", req.URL.String(),
 		"status", back.Status,
@@ -254,7 +254,7 @@ type listResponse struct {
 
 func ghpage(resp http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	logger := logging.FromContext(ctx)
+	logger := slogctx.FromContext(ctx)
 
 	url := fmt.Sprintf("https://cgr.dev/chainguard%s", req.URL.Path)
 	logger.Infof("Redirecting %q to %q", req.URL, url)

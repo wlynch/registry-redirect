@@ -14,6 +14,7 @@ import (
 
 	"github.com/chainguard-dev/registry-redirect/pkg/redirect"
 	"github.com/google/go-containerregistry/pkg/crane"
+	"github.com/wlynch/slogctx/slogtest"
 )
 
 func TestRedirect(t *testing.T) {
@@ -56,6 +57,7 @@ func TestGHPageRedirect(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			req = req.WithContext(slogtest.TestContextWithLogger(t))
 			resp, err := http.DefaultTransport.RoundTrip(req)
 			if err != nil {
 				t.Fatal(err)
